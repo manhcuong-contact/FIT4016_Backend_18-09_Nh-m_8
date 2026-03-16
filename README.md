@@ -1,5 +1,3 @@
-# BÁO CÁO BÀI TẬP LỚN
-
 ## Xây dựng Backend Hệ thống Quản lý Gia công Thủ công Mỹ nghệ (CraftOutsourcing)
 
 ---
