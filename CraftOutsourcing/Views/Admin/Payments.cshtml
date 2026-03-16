@@ -1,0 +1,171 @@
+@{
+    ViewData["Title"] = "Quản Lý Thanh Toán";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; gap: 20px;">
+    <div>
+        <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: #1F2937;">💵 Quản Lý Thanh Toán</h2>
+        <p style="margin: 0; color: #6B7280; font-size: 15px;">Theo dõi và phê duyệt thanh toán cho hộ gia công</p>
+    </div>
+</div>
+
+<div class="card p-4">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3>Lịch Sử Thanh Toán</h3>
+        <div id="totalPaid" style="font-size:18px;font-weight:700;color:#059669;"></div>
+    </div>
+    <table class="table" id="paymentsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Hộ Gia Công</th>
+                <th>Sản Phẩm</th>
+                <th>SL Đạt</th>
+                <th>Đơn Giá</th>
+                <th>Thành Tiền</th>
+                <th>Ngày TT</th>
+                <th>Trạng Thái</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section Styles {
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            gap: 20px;
+        }
+
+        .page-header h2 {
+            margin: 0 0 8px 0;
+            font-size: 32px;
+            font-weight: 800;
+            color: #1F2937;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #6B7280;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #E5E7EB;
+        }
+
+        .table { 
+            width: 100%; 
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+
+        .table thead tr {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+
+        .table th { 
+            padding: 16px 14px; 
+            text-align: left; 
+            border: none;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: white;
+        }
+
+        .table td { 
+            padding: 14px; 
+            text-align: left; 
+            border-bottom: 1px solid #E5E7EB; 
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: #F9FAFB;
+            transform: translateX(2px);
+        }
+
+        .badge { 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            font-size: 12px; 
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .bg-paid { 
+            background: #D1FAE5; 
+            color: #059669; 
+        }
+
+        .bg-unpaid { 
+            background: #FEF3C7; 
+            color: #D97706; 
+        }
+
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .table tbody tr {
+            animation: slideIn 0.3s ease;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', loadPayments);
+
+        async function loadPayments() {
+            const res = await fetch('/Admin/GetPayments');
+            const data = await res.json();
+            const tbody = document.querySelector('#paymentsTable tbody');
+            tbody.innerHTML = '';
+
+            let total = 0;
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;">Chưa có thanh toán nào.</td></tr>';
+            } else {
+                data.forEach(p => {
+                    total += p.amount;
+                    let badge = p.status === 'Paid' ? '<span class="badge bg-paid">Đã Trả</span>' : '<span class="badge bg-unpaid">Chưa Trả</span>';
+                    tbody.innerHTML += `<tr>
+                        <td>#${p.id}</td>
+                        <td>${p.userName}</td>
+                        <td>${p.productName}</td>
+                        <td>${p.quantityGood}</td>
+                        <td>${Number(p.unitPrice).toLocaleString()} d</td>
+                        <td><strong>${Number(p.amount).toLocaleString()} d</strong></td>
+                        <td>${p.paymentDate}</td>
+                        <td>${badge}</td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('totalPaid').innerText = 'Tổng: ' + Number(total).toLocaleString() + ' VND';
+        }
+    </script>
+}

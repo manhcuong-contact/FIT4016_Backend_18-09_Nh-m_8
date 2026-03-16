@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Gia Công Làng Nghề</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        .user-layout {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        .user-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-header .brand { font-size: 20px; font-weight: 700; }
+        .user-header .user-info { display: flex; gap: 20px; align-items: center; }
+        .user-header a { color: #E0E7FF; font-weight: 500; }
+        .user-header a:hover { color: white; text-decoration: none; }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+            background-color: #F9FAFB;
+            max-width: 1200px; margin: 0 auto; width: 100%;
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .user-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 12px 16px;
+            }
+            .user-header .brand { font-size: 16px; }
+            .user-header .user-info {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 10px;
+                font-size: 13px;
+            }
+            .content {
+                padding: 16px;
+            }
+        }
+    </style>
+    <!-- Validation & Toast CSS -->
+    <link rel="stylesheet" href="~/css/validation.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="user-layout">
+        <header class="user-header">
+            <div class="brand">Làng Nghề Gia Công</div>
+            <div class="user-info">
+                <a href="/User/Index" style="color: #E0E7FF;">Công Việc</a>
+                <a href="/User/Recipes" style="color: #E0E7FF;">Công Thức</a>
+                <a href="/User/MyProgress" style="color: #E0E7FF;">Thu Nhập</a>
+                <span style="margin-left:10px;">Xin chào, <strong>@User.FindFirst("FullName")?.Value</strong></span>
+                <a href="/Auth/Logout" style="color: #FCA5A5;">Đăng Xuất</a>
+            </div>
+        </header>
+
+        <main class="content">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Validation & Toast Scripts -->
+    <script src="~/js/toast.js" asp-append-version="true"></script>
+    <script src="~/js/validation.js" asp-append-version="true"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

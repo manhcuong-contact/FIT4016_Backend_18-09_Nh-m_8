@@ -1,0 +1,134 @@
+@{
+    ViewData["Title"] = "Tien Do San Xuat";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header">
+    <h2>Quan Sat Tien Do</h2>
+    <button class="btn btn-primary" onclick="checkOverdue()"><i class="fa fa-clock"></i> Kiem Tra Qua Han</button>
+</div>
+
+<!-- Tien do don hang mau -->
+<div class="card p-4">
+    <h3 style="margin-bottom:16px;">Tien Do Don Hang Mau</h3>
+    <div id="orderProgressList"></div>
+</div>
+
+<!-- Tien do giao viec dang thuc hien -->
+<div class="card p-4" style="margin-top:20px;">
+    <h3 style="margin-bottom:16px;">Cac Don Giao Viec Dang Thuc Hien</h3>
+    <table class="table" id="assignProgressTable">
+        <thead>
+            <tr>
+                <th>Ma Don</th>
+                <th>Ho Dan</th>
+                <th>San Pham</th>
+                <th>So Luong</th>
+                <th>Han Nop</th>
+                <th>Con Lai</th>
+                <th>Trang Thai</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section Styles {
+    <style>
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #E5E7EB; font-size: 14px; }
+        .table th { background: #F3F4F6; font-weight: 600; color: #374151; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .bg-active { background: #DBEAFE; color: #2563EB; }
+        .bg-overdue { background: #FEE2E2; color: #DC2626; }
+        .bg-pending { background: #FEF3C7; color: #D97706; }
+        .bg-done { background: #D1FAE5; color: #059669; }
+        .progress-bar-bg { background: #E5E7EB; border-radius: 8px; height: 10px; width: 100%; }
+        .progress-bar-fill { border-radius: 8px; height: 10px; display: block; transition: width 0.3s; }
+        .order-card { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .order-card h4 { margin: 0 0 8px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .btn-primary { background: #4F46E5; color: white; }
+        .assign-row { font-size: 13px; padding: 6px 0; border-bottom: 1px solid #F3F4F6; display: flex; justify-content: space-between; }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', loadProgress);
+
+        async function loadProgress() {
+            const res = await fetch('/Admin/GetOrderProgress');
+            const data = await res.json();
+
+            // Don hang mau
+            const container = document.getElementById('orderProgressList');
+            container.innerHTML = '';
+            if (data.sampleOrders.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:20px;color:#6B7280;">Chua co don hang.</p>';
+            } else {
+                data.sampleOrders.forEach(o => {
+                    let fillColor = o.progressPercent >= 100 ? '#059669' : '#4F46E5';
+                    if (o.status === 'Cancelled') fillColor = '#9CA3AF';
+
+                    let assignHtml = o.assignments.map(a => {
+                        let sBadge = a.isOverdue ? '<span class="badge bg-overdue">Qua Han</span>'
+                            : a.status === 'Completed' ? '<span class="badge bg-done">Xong</span>'
+                            : a.status === 'PendingVerification' ? '<a href="/Admin/Submissions" class="badge bg-pending" style="text-decoration:none;" title="Chuyển đến màn Duyệt Thành Phẩm">Cho Duyệt &rarr;</a>'
+                            : '<span class="badge bg-active">Dang Lam</span>';
+                        return `<div class="assign-row">
+                            <span>${a.userName} - ${a.quantityAssigned} sp</span>
+                            <span>Da nop dat: ${a.submitted} | Han: ${a.dueDate} ${sBadge}</span>
+                        </div>`;
+                    }).join('');
+
+                    container.innerHTML += `<div class="order-card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <h4>${o.orderCode} - ${o.customerName}</h4>
+                            <span style="font-size:13px;color:#6B7280;">${o.productName} | Han: ${o.targetDate || 'Chua co'}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;margin:12px 0;">
+                            <div class="progress-bar-bg" style="flex:1;">
+                                <span class="progress-bar-fill" style="width:${o.progressPercent}%;background:${fillColor};"></span>
+                            </div>
+                            <strong>${o.completedQuantity}/${o.totalQuantity} (${o.progressPercent}%)</strong>
+                        </div>
+                        ${assignHtml || '<p style="font-size:13px;color:#9CA3AF;">Chua giao viec cho ho dan nao.</p>'}
+                    </div>`;
+                });
+            }
+
+            // Don giao viec
+            const atb = document.querySelector('#assignProgressTable tbody');
+            atb.innerHTML = '';
+            data.assignmentProgress.forEach(a => {
+                let badge = a.isOverdue ? '<span class="badge bg-overdue">QUA HAN</span>'
+                    : a.status === 'PendingVerification' ? '<a href="/Admin/Submissions" class="badge bg-pending" style="text-decoration:none;" title="Chuyển đến màn Duyệt Thành Phẩm">Cho Duyệt &rarr;</a>'
+                    : '<span class="badge bg-active">Dang Lam</span>';
+                let daysText = a.daysLeft < 0 ? `<span style="color:#DC2626;font-weight:600;">Tre ${Math.abs(a.daysLeft)} ngay</span>`
+                    : `${a.daysLeft} ngay`;
+
+                atb.innerHTML += `<tr ${a.isOverdue ? 'style="background:#FEF2F2;"' : ''}>
+                    <td>#${a.id}</td>
+                    <td>${a.userName}</td>
+                    <td>${a.productName}</td>
+                    <td>${a.quantityAssigned}</td>
+                    <td>${a.dueDate}</td>
+                    <td>${daysText}</td>
+                    <td>${badge}</td>
+                </tr>`;
+            });
+            if (data.assignmentProgress.length === 0) {
+                atb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">Khong co don nao dang thuc hien.</td></tr>';
+            }
+        }
+
+        async function checkOverdue() {
+            const res = await fetch('/Admin/CheckOverdue', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message);
+            loadProgress();
+        }
+    </script>
+}

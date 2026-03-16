@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Đăng Ký";
+}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="auth-title">Đăng Ký</h2>
+        <p class="auth-subtitle">Gia nhập hệ thống gia công</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+
+        <form asp-controller="Auth" asp-action="Register" method="post" class="auth-form" id="registerForm">
+            <div class="form-group">
+                <label for="username">Tên đăng nhập <span class="required">*</span></label>
+                <input type="text" id="username" name="username" class="form-control" required 
+                       data-validate="nameOnly"
+                       data-field-name="Tên đăng nhập"
+                       placeholder="Ví dụ: hoiabc, tranthib, v.v." />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu <span class="required">*</span></label>
+                <input type="password" id="password" name="password" class="form-control" required placeholder="Tạo mật khẩu" />
+            </div>
+
+            <div class="form-group">
+                <label for="fullname">Họ và tên Hộ dân <span class="required">*</span></label>
+                <input type="text" id="fullname" name="fullname" class="form-control" required 
+                       data-validate="nameOnly"
+                       data-field-name="Họ và tên"
+                       placeholder="Ví dụ: Trần Thị Hoa, Nguyễn Văn A" />
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Số điện thoại liên hệ <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" class="form-control" required
+                       data-validate="phone"
+                       data-field-name="Số điện thoại"
+                       placeholder="Ví dụ: 0123456789" />
+            </div>
+
+            <div class="form-group">
+                <label for="address">Địa chỉ</label>
+                <input type="text" id="address" name="address" class="form-control" 
+                       data-validate="address"
+                       data-field-name="Địa chỉ"
+                       placeholder="Nhập địa chỉ" />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Đăng Ký</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Đã có tài khoản? <a href="/Auth/Login">Đăng nhập</a></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const usernameInput = document.getElementById('username');
+            const fullnameInput = document.getElementById('fullname');
+            const phoneInput = document.getElementById('phone');
+            const addressInput = document.getElementById('address');
+            
+            // Clear previous errors
+            clearInputError(usernameInput);
+            clearInputError(fullnameInput);
+            clearInputError(phoneInput);
+            clearInputError(addressInput);
+            
+            // Validate required fields
+            if (!validateRequired(usernameInput, 'Tên đăng nhập')) {
+                e.preventDefault();
+                return;
+            }
+            if (!validateRequired(fullnameInput, 'Họ và tên')) {
+                e.preventDefault();
+                return;
+            }
+            if (!validateRequired(phoneInput, 'Số điện thoại')) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Validate formats
+            if (!validateInput(usernameInput, 'nameOnly')) {
+                e.preventDefault();
+                return;
+            }
+            if (!validateInput(fullnameInput, 'nameOnly')) {
+                e.preventDefault();
+                return;
+            }
+            if (!validateInput(phoneInput, 'phone')) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Validate address only if filled
+            const addressValue = addressInput.value.trim();
+            if (addressValue && !validateInput(addressInput, 'address')) {
+                e.preventDefault();
+                return;
+            }
+            
+            // If all validations pass, form will submit normally
+        });
+    </script>
+}
+

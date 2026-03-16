@@ -1,0 +1,102 @@
+@{
+    ViewData["Title"] = "Dang Ky Admin";
+}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="auth-title">Đăng Ký Quản Trị Viên</h2>
+        <p class="auth-subtitle">Tài khoản Admin cần được phê duyệt bởi Admin hiện tại trước khi đăng nhập.</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+
+        <form asp-controller="Auth" asp-action="RegisterAdmin" method="post" class="auth-form" id="registerAdminForm">
+            <div class="form-group">
+                <label for="username">Tên đăng nhập <span class="required">*</span></label>
+                <input type="text" id="username" name="username" class="form-control" required 
+                       data-validate="nameOnly"
+                       data-field-name="Tên đăng nhập"
+                       placeholder="Ví dụ: adminhoa, admina, v.v." />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu <span class="required">*</span></label>
+                <input type="password" id="password" name="password" class="form-control" required placeholder="Tạo mật khẩu" />
+            </div>
+
+            <div class="form-group">
+                <label for="fullname">Họ và tên <span class="required">*</span></label>
+                <input type="text" id="fullname" name="fullname" class="form-control" required 
+                       data-validate="nameOnly"
+                       data-field-name="Họ và tên"
+                       placeholder="Ví dụ: Trần Thị Hoa" />
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Số điện thoại <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" class="form-control" required
+                       data-validate="phone"
+                       data-field-name="Số điện thoại"
+                       placeholder="Ví dụ: 0123456789" />
+            </div>
+
+            <div style="background:#FEF3C7; border:1px solid #F59E0B; border-radius:8px; padding:12px; margin-bottom:16px; font-size:13px; color:#92400E;">
+                <i class="fa fa-info-circle"></i> Sau khi đăng ký, tài khoản sẽ ở trạng thái <strong>chờ duyệt</strong>. Bạn cần liên hệ Admin hiện tại để được phê duyệt trước khi có thể đăng nhập.
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Đăng Ký Admin</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Đã có tài khoản? <a href="/Auth/Login">Đăng nhập</a></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('registerAdminForm').addEventListener('submit', function(e) {
+            const usernameInput = document.getElementById('username');
+            const fullnameInput = document.getElementById('fullname');
+            const phoneInput = document.getElementById('phone');
+            
+            // Clear previous errors
+            clearInputError(usernameInput);
+            clearInputError(fullnameInput);
+            clearInputError(phoneInput);
+            
+            // Validate required fields
+            if (!validateRequired(usernameInput, 'Tên đăng nhập')) {
+                e.preventDefault();
+                return;
+            }
+            if (!validateRequired(fullnameInput, 'Họ và tên')) {
+                e.preventDefault();
+                return;
+            }
+            if (!validateRequired(phoneInput, 'Số điện thoại')) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Validate formats
+            if (!validateInput(usernameInput, 'nameOnly')) {
+                e.preventDefault();
+                return;
+            }
+            if (!validateInput(fullnameInput, 'nameOnly')) {
+                e.preventDefault();
+                return;
+            }
+            if (!validateInput(phoneInput, 'phone')) {
+                e.preventDefault();
+                return;
+            }
+            
+            // If all validations pass, form will submit normally
+        });
+    </script>
+}
+

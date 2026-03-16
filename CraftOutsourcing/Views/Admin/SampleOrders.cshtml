@@ -1,0 +1,220 @@
+@{
+    ViewData["Title"] = "Đơn Hàng Mẫu";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+    <div>
+        <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: #1F2937;">📋 Quản Lý Đơn Hàng Mẫu</h2>
+        <p style="margin: 0; color: #6B7280; font-size: 15px;">Tạo và theo dõi các đơn hàng từ khách hàng</p>
+    </div>
+    <button class="btn btn-primary" onclick="openCreateModal()" style="padding: 10px 20px; font-size: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 15px rgba(102,126,234,0.3);"><i class="fa fa-plus"></i> Tạo Đơn Mới</button>
+</div>
+
+<div class="card p-4">
+    <table class="table" id="ordersTable">
+        <thead>
+            <tr>
+                <th>Mã Đơn</th>
+                <th>Khách Hàng</th>
+                <th>Sản Phẩm</th>
+                <th>SL Cần</th>
+                <th>Đã Xong</th>
+                <th>Tiến Độ</th>
+                <th>Giá Bán</th>
+                <th>Trạng Thái</th>
+                <th>Hạn</th>
+                <th>Thao Tác</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+    <div id="createModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <h3>Tạo Đơn Hàng Mẫu</h3>
+        <div class="form-group">
+            <label>Mã Đơn Hàng</label>
+            <input type="text" id="orderCode" class="form-control" required
+                   data-validate="alphanumericDash"
+                   data-field-name="Mã đơn hàng"
+                   placeholder="Ví dụ: DH-2025-001" />
+        </div>
+        <div class="form-group">
+            <label>Tên Khách Hàng</label>
+            <input type="text" id="customerName" class="form-control" required
+                   data-validate="nameOnly"
+                   data-field-name="Tên khách hàng"
+                   placeholder="Ví dụ: Công ty ABC, Ông Nguyễn A" />
+        </div>
+        <div class="form-group">
+            <label>Sản Phẩm</label>
+            <select id="productId" class="form-control"></select>
+        </div>
+        <div class="form-group">
+            <label>Số Lượng Cần Sản Xuất</label>
+            <input type="number" id="totalQuantity" class="form-control" min="1" />
+        </div>
+        <div class="form-group">
+            <label>Giá Bán (VND)</label>
+            <input type="number" id="sellingPrice" class="form-control" min="0" step="1" placeholder="Nhập số tiền (VD: 1000000)" />
+        </div>
+        <div class="form-group">
+            <label>Hạn Hoàn Thành</label>
+            <input type="date" id="targetDate" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>Mô Tả</label>
+            <textarea id="description" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeCreateModal()">Hủy</button>
+            <button class="btn btn-primary" onclick="createOrder()">Tạo Đơn</button>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #E5E7EB; font-size: 14px; }
+        .table th { background: #F3F4F6; font-weight: 600; color: #374151; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .bg-draft { background: #F3F4F6; color: #374151; }
+        .bg-production { background: #DBEAFE; color: #2563EB; }
+        .bg-completed { background: #D1FAE5; color: #059669; }
+        .bg-cancelled { background: #FEE2E2; color: #DC2626; }
+        .progress-bar-bg { background: #E5E7EB; border-radius: 8px; height: 8px; width: 100px; display: inline-block; }
+        .progress-bar-fill { background: #4F46E5; border-radius: 8px; height: 8px; display: block; }
+        .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; }
+        .modal-content { background: white; padding: 24px; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+        .form-control { width: 100%; padding: 8px 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .btn-primary { background: #4F46E5; color: white; }
+        .btn-secondary { background: #E5E7EB; color: #374151; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => { loadOrders(); loadProducts(); });
+
+        let products = [];
+
+        async function loadProducts() {
+            const res = await fetch('/Admin/GetProducts');
+            products = await res.json();
+            const sel = document.getElementById('productId');
+            sel.innerHTML = products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        }
+
+        async function loadOrders() {
+            const res = await fetch('/Admin/GetSampleOrders');
+            const data = await res.json();
+            const tbody = document.querySelector('#ordersTable tbody');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;">Chưa có đơn hàng mẫu nào.</td></tr>';
+                return;
+            }
+            data.forEach(o => {
+                let statusClass = 'bg-draft';
+                let statusText = o.status;
+                if (o.status === 'InProduction') { statusClass = 'bg-production'; statusText = 'Đang SX'; }
+                else if (o.status === 'Completed') { statusClass = 'bg-completed'; statusText = 'Hoàn Thành'; }
+                else if (o.status === 'Cancelled') { statusClass = 'bg-cancelled'; statusText = 'Đã Hủy'; }
+                else if (o.status === 'Confirmed') { statusClass = 'bg-production'; statusText = 'Đã Xác Nhận'; }
+
+                let actions = '';
+                if (o.status === 'Draft') {
+                    actions = `<button class="btn btn-sm btn-primary" onclick="updateStatus(${o.id}, 'Confirmed')">Xác Nhận</button>`;
+                } else if (o.status === 'Confirmed' || o.status === 'InProduction') {
+                    actions = `<button class="btn btn-sm" style="background:#FEF3C7;color:#D97706;" onclick="updateStatus(${o.id}, 'Cancelled')">Hủy</button>`;
+                }
+
+                tbody.innerHTML += `<tr>
+                    <td><strong>${o.orderCode}</strong></td>
+                    <td>${o.customerName}</td>
+                    <td>${o.productName}</td>
+                    <td>${o.totalQuantity}</td>
+                    <td>${o.completedQuantity}</td>
+                    <td>
+                        <div class="progress-bar-bg"><span class="progress-bar-fill" style="width:${o.progressPercent}%"></span></div>
+                        <span style="font-size:12px;margin-left:4px;">${o.progressPercent}%</span>
+                    </td>
+                    <td>${Number(o.sellingPrice).toLocaleString()} d</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td>${o.targetDate}</td>
+                    <td>${actions}</td>
+                </tr>`;
+            });
+        }
+
+        function openCreateModal() { document.getElementById('createModal').style.display = 'flex'; }
+        function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
+
+        async function createOrder() {
+            const codeInput = document.getElementById('orderCode');
+            const nameInput = document.getElementById('customerName');
+            
+            // Validate required
+            if (!validateRequired(codeInput, 'Mã đơn hàng')) return;
+            if (!validateRequired(nameInput, 'Tên khách hàng')) return;
+            
+            // Validate format
+            if (!validateInput(codeInput, 'alphanumericDash')) return;
+            if (!validateInput(nameInput, 'nameOnly')) return;
+            
+            const body = {
+                orderCode: codeInput.value.trim(),
+                customerName: nameInput.value.trim(),
+                productId: parseInt(document.getElementById('productId').value),
+                totalQuantity: parseInt(document.getElementById('totalQuantity').value),
+                sellingPrice: parseFloat(document.getElementById('sellingPrice').value) || 0,
+                targetDate: document.getElementById('targetDate').value || null,
+                description: document.getElementById('description').value
+            };
+            
+            const res = await fetch('/Admin/CreateSampleOrder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            
+            if (!res.ok) {
+                showError('✕ Lỗi: ' + await res.text());
+                return;
+            }
+            
+            const result = await res.json();
+            showSuccess('✓ ' + result.message + ' | Giá thành dự kiến: ' + Number(result.estimatedCost).toLocaleString() + ' VND');
+            closeCreateModal();
+            loadOrders();
+        }
+
+        async function updateStatus(id, status) {
+            confirmDialog(
+                `Xác nhận thay đổi trạng thái đơn hàng thành <strong>${status === 'Confirmed' ? 'Đã Xác Nhận' : 'Đã Hủy'}</strong>?`,
+                'Cập Nhật Trạng Thái',
+                async () => {
+                    const res = await fetch(`/Admin/UpdateSampleOrderStatus?id=${id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(status)
+                    });
+                    if (res.ok) {
+                        showSuccess('✓ Đã cập nhật trạng thái');
+                        loadOrders();
+                    }
+                    else showError('✕ Lỗi: ' + await res.text());
+                }
+            );
+        }
+    </script>
+}

@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Đăng Nhập";
+}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="auth-title">Đăng Nhập</h2>
+        <p class="auth-subtitle">Hệ thống quản lý đặt hàng gia công</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+        @if (TempData["SuccessMsg"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMsg"]</div>
+        }
+
+        <form asp-controller="Auth" asp-action="Login" method="post" class="auth-form" id="loginForm">
+            <div class="form-group">
+                <label for="username">Tài khoản</label>
+                <input type="text" id="username" name="username" class="form-control" required 
+                       data-validate="nameOnly"
+                       data-field-name="Tài khoản"
+                       placeholder="Ví dụ: hoiabc, tranthib" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" id="password" name="password" class="form-control" required placeholder="Nhập mật khẩu" />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Đăng Nhập</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Hộ gia công mới? <a href="/Auth/Register">Đăng ký ngay</a></p>
+            <p style="margin-top: 10px; font-size: 13px;">
+                <a href="/Auth/RegisterAdmin" style="color: #64748B;"><i class="fa fa-user-shield"></i> Đăng ký tài khoản Admin</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const usernameInput = document.getElementById('username');
+            
+            // Clear previous errors
+            clearInputError(usernameInput);
+            
+            // Validate required
+            if (!validateRequired(usernameInput, 'Tài khoản')) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Validate format
+            if (!validateInput(usernameInput, 'nameOnly')) {
+                e.preventDefault();
+                return;
+            }
+        });
+    </script>
+}
+

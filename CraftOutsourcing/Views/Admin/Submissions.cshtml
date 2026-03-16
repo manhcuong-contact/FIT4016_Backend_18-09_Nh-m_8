@@ -1,0 +1,355 @@
+@{
+    ViewData["Title"] = "Duyệt Thành Phẩm KCS";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header" style="display: flex; justify-content: flex-between; align-items: center; margin-bottom: 32px;">
+    <div>
+        <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: #1F2937;">✔️ Duyệt Thành Phẩm & KCS</h2>
+        <p style="margin: 0; color: #6B7280; font-size: 15px;">Phê duyệt và tính tiền cho các sản phẩm gia công</p>
+    </div>
+</div>
+
+<div class="card p-4">
+    <p class="text-muted mb-3" style="font-size: 15px; line-height: 1.6;">
+        Duyệt và tính tiền cho các sản phẩm hộ gia công đã nộp. Phân chia số lượng "Đạt KCS" và "Lỗi" rồi bấm Duyệt.
+    </p>
+    
+    <table class="table w-100" id="subTable" style="font-size: 14px;">
+        <thead>
+            <tr>
+                <th>Mã Nộp</th>
+                <th>Lần Nộp</th>
+                <th>Đơn Giao</th>
+                <th>Hộ Dân</th>
+                <th>Sản Phẩm</th>
+                <th title="Số lượng nộp">SL Nộp</th>
+                <th>Thời Gian Nộp</th>
+                <th>Trạng Thái</th>
+                <th>Hành Động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Load from AJAX -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Duyệt Submission -->
+<div id="approvalModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:center;">
+    <div style="background:white;border-radius:12px;padding:24px;width:500px;box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+        <h3 style="margin-bottom:20px;">Phê Duyệt Thành Phẩm</h3>
+        
+        <div style="background:#F3F4F6;padding:12px;border-radius:8px;margin-bottom:20px;">
+            <p style="margin:0;font-size:14px;color:#6B7280;"><strong>Số Lượng Nộp:</strong> <span id="modalSubmittedQty" style="color:#111827;font-weight:600;">0</span></p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+            <div>
+                <label style="font-size:14px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Số Lượng Đạt KCS</label>
+                <input type="number" id="goodQty" min="0" placeholder="Nhập số sản phẩm đạt" style="width:100%;padding:8px;border:1px solid #D1D5DB;border-radius:6px;">
+            </div>
+            <div>
+                <label style="font-size:14px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Số Lượng Lỗi</label>
+                <input type="number" id="defectQty" min="0" placeholder="Nhập số sản phẩm lỗi" style="width:100%;padding:8px;border:1px solid #D1D5DB;border-radius:6px;">
+            </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <label style="font-size:14px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Ghi Chú (tuỳ chọn)</label>
+            <textarea id="reviewNote" style="width:100%;padding:8px;border:1px solid #D1D5DB;border-radius:6px;height:70px;"></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <button onclick="closeApprovalModal()" style="padding:8px;background:#E5E7EB;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Hủy</button>
+            <button onclick="submitApproval()" style="padding:8px;background:#3B82F6;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Duyệt & Tính Tiền</button>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            gap: 20px;
+        }
+
+        .page-header h2 {
+            margin: 0 0 8px 0;
+            font-size: 32px;
+            font-weight: 800;
+            color: #1F2937;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #6B7280;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .card {
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            background: #FFFFFF;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+
+        .table thead tr {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .table th {
+            color: white;
+            padding: 16px 14px;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+            text-align: left;
+        }
+
+        .table tbody tr {
+            border-bottom: 1px solid #E5E7EB;
+            transition: all 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: #F9FAFB;
+            transform: translateX(2px);
+        }
+
+        .table td {
+            padding: 14px;
+            font-size: 14px;
+            color: #374151;
+            text-align: left;
+        }
+
+        .text-success { color: #10B981; font-weight: 600; }
+        .text-danger { color: #EF4444; font-weight: 600; }
+        .text-muted { color: #6B7280; }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .badge-success {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-warning {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-danger {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-info {
+            background-color: #06B6D4;
+            color: white;
+            border: none;
+        }
+
+        .btn-info:hover {
+            background-color: #0891B2;
+            transform: translateY(-1px);
+        }
+
+        .mb-3 { margin-bottom: 16px; }
+
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .table tbody tr {
+            animation: slideIn 0.3s ease;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let currentSubmissionId = null;
+        let currentSubmittedQty = null;
+        let currentUnitPrice = null;
+
+        document.addEventListener('DOMContentLoaded', loadSubmissions);
+
+        async function loadSubmissions() {
+            try {
+                const res = await fetch('/Admin/GetSubmissions');
+                const data = await res.json();
+                
+                const tbody = document.querySelector('#subTable tbody');
+                tbody.innerHTML = '';
+                
+                if(data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center">Chưa có hộ gia công nào nộp thành phẩm.</td></tr>`;
+                    return;
+                }
+
+                data.forEach(s => {
+                    let statusBadge = `<span style="color:#D97706; background:#FEF3C7; padding:4px 8px; border-radius:4px; font-size:12px;">Đang Chờ Duyệt</span>`;
+                    let actionBtn = `<button class="btn-sm btn-primary" onclick="openApprovalModal(${s.id}, ${s.quantitySubmitted}, ${s.unitPrice})">Phê Duyệt</button>`;
+                    
+                    if (s.status === 'Approved') {
+                        statusBadge = `<span style="color:#059669; background:#D1FAE5; padding:4px 8px; border-radius:4px; font-size:12px;">Đã Duyệt</span>`;
+                        actionBtn = `<span class="text-muted" style="font-size:12px;"><i class="fa fa-check"></i> Hoàn tất</span>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>#${s.id}</strong></td>
+                            <td><span style="font-size:12px;">Lần ${s.submissionNumber}</span></td>
+                            <td><a href="/Admin/Assignments">#${s.assignmentId}</a></td>
+                            <td>${s.user}</td>
+                            <td>${s.product}</td>
+                            <td><strong>${s.quantitySubmitted}</strong></td>
+                            <td style="font-size:12px;">${s.submittedDate}</td>
+                            <td>${statusBadge}</td>
+                            <td>${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error("Lỗi:", error);
+                showError('❌ Lỗi tải danh sách nộp hàng');
+            }
+        }
+
+        function openApprovalModal(subId, submittedQty, unitPrice) {
+            currentSubmissionId = subId;
+            currentSubmittedQty = submittedQty;
+            currentUnitPrice = unitPrice;
+
+            document.getElementById('modalSubmittedQty').innerText = submittedQty;
+            document.getElementById('goodQty').value = '';
+            document.getElementById('goodQty').max = submittedQty;
+            document.getElementById('defectQty').value = '';
+            document.getElementById('reviewNote').value = '';
+
+            document.getElementById('approvalModal').style.display = 'flex';
+        }
+
+        function closeApprovalModal() {
+            document.getElementById('approvalModal').style.display = 'none';
+        }
+
+        async function submitApproval() {
+            const good = parseInt(document.getElementById('goodQty').value) || 0;
+            const defect = parseInt(document.getElementById('defectQty').value) || 0;
+            const reviewNote = document.getElementById('reviewNote').value?.trim() || '';
+
+            // Validation
+            if (good < 0 || defect < 0) {
+                showError('❌ Số lượng không thể âm');
+                return;
+            }
+
+            if (good + defect !== currentSubmittedQty) {
+                showError(`Tổng số lượng (Đạt + Lỗi) phải bằng ${currentSubmittedQty}\nBạn nhập: ${good} + ${defect} = ${good + defect}`);
+                return;
+            }
+
+            const totalPayment = good * currentUnitPrice;
+            const confirmMsg = `📦 Đạt KCS: <strong>${good} sản phẩm</strong>\n❌ Lỗi: <strong>${defect} sản phẩm</strong>\n💰 Tính công: ${good} × ${Number(currentUnitPrice).toLocaleString('vi-VN')}đ = <strong>${Number(totalPayment).toLocaleString('vi-VN')} VNĐ</strong>\n\n${defect > 0 ? '⚠️ Sẽ tự động tạo phiếu phạt cho hộ dân' : ''}`;
+            
+            confirmDialog(confirmMsg, 'Phê Duyệt Nộp Sản Phẩm', async () => {
+                try {
+                    const params = new URLSearchParams({
+                        id: currentSubmissionId,
+                        good: good,
+                        defect: defect,
+                        reviewNote: reviewNote
+                    });
+
+                    const res = await fetch(`/Admin/ApproveSubmission?${params.toString()}`, { method: 'POST' });
+                    
+                    let result = {};
+                    const contentType = res.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await res.json();
+                    } else {
+                        result = { message: await res.text() };
+                    }
+                    
+                    if(!res.ok) {
+                        showError('❌ Lỗi: ' + (result.message || result.error || 'Không xác định'));
+                        return;
+                    }
+
+                    showSuccess('✅ ' + (result.message || 'Duyệt thành công'));
+                    closeApprovalModal();
+                    loadSubmissions(); // Tải lại bảng
+                } catch(e) {
+                    console.error('Error:', e);
+                    showError('❌ Lỗi kết nối máy chủ: ' + e.message);
+                }
+            });
+        }
+
+        // Đóng modal khi bấm ngoài
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('approvalModal');
+            if (event.target === modal) {
+                closeApprovalModal();
+            }
+        });
+
+        // Auto-update defect qty khi change good qty
+        document.getElementById('goodQty')?.addEventListener('change', function() {
+            const good = parseInt(this.value) || 0;
+            const defect = currentSubmittedQty - good;
+            if(defect >= 0) {
+                document.getElementById('defectQty').value = defect;
+            }
+        });
+    </script>
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #111827; /* Darker navy standard */
+            color: #F9FAFB;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .brand {
+            padding: 24px 20px;
+            margin: 0;
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #0f172a;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .sidebar nav {
+            flex: 1;
+            padding: 20px 12px;
+        }
+
+        .sidebar nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #9CA3AF;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .sidebar nav a i {
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .sidebar nav a:hover {
+            color: #F3F4F6;
+            background: #1F2937;
+        }
+
+        .sidebar nav a.active {
+            color: #FFFFFF;
+            background: #4F46E5; /* Indigo 600 */
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);
+        }
+
+        .sidebar nav hr { border-color: #374151; margin: 16px 8px; }
+        .sidebar nav .logout-btn { color: #F87171; }
+        .sidebar nav .logout-btn:hover { background: rgba(248, 113, 113, 0.1); color: #FCA5A5; }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+            background-color: #F9FAFB;
+            overflow-y: auto;
+        }
+        
+        .page-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+    <!-- Validation & Toast CSS -->
+    <link rel="stylesheet" href="~/css/validation.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <h3 class="brand"><i class="fa-solid fa-layer-group" style="color: #6366f1;"></i> Admin Panel</h3>
+            <nav id="adminNav">
+                <a href="/Admin/Index" class="nav-link" data-path="/Admin/Index"><i class="fa-solid fa-chart-pie"></i> Thống Kê</a>
+                <a href="/Admin/SampleOrders" class="nav-link" data-path="/Admin/SampleOrders"><i class="fa-solid fa-file-invoice"></i> Đơn Hàng Mẫu</a>
+                <a href="/Admin/Products" class="nav-link" data-path="/Admin/Products"><i class="fa-solid fa-cube"></i> Quy Trình (BOM)</a>
+                <a href="/Admin/Materials" class="nav-link" data-path="/Admin/Materials"><i class="fa-solid fa-box-open"></i> Vật Tư</a>
+                <a href="/Admin/Inventory" class="nav-link" data-path="/Admin/Inventory"><i class="fa-solid fa-warehouse"></i> Kho</a>
+                <a href="/Admin/Assignments" class="nav-link" data-path="/Admin/Assignments"><i class="fa-solid fa-truck-fast"></i> Giao Việc</a>
+                <a href="/Admin/Submissions" class="nav-link" data-path="/Admin/Submissions"><i class="fa-solid fa-clipboard-check"></i> Duyệt Thành Phẩm</a>
+                <a href="/Admin/FinishedProducts" class="nav-link" data-path="/Admin/FinishedProducts"><i class="fa-solid fa-gem"></i> Thành Phẩm</a>
+                <a href="/Admin/CostEstimation" class="nav-link" data-path="/Admin/CostEstimation"><i class="fa-solid fa-calculator"></i> Giá Thành</a>
+                <a href="/Admin/Payments" class="nav-link" data-path="/Admin/Payments"><i class="fa-solid fa-money-bill-wave"></i> Thanh Toán</a>
+                <a href="/Admin/Penalties" class="nav-link" data-path="/Admin/Penalties"><i class="fa-solid fa-gavel"></i> Phạt</a>
+                <hr />
+                <a href="/Admin/Users" class="nav-link" data-path="/Admin/Users"><i class="fa-solid fa-users"></i> Hộ Dân</a>
+                <a href="/Admin/AdminAccounts" class="nav-link" data-path="/Admin/AdminAccounts"><i class="fa-solid fa-user-shield"></i> Quản Lý Admin</a>
+                <hr />
+                <a href="/Auth/Logout" class="logout-btn"><i class="fa-solid fa-sign-out-alt"></i> Đăng Xuất</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Script tự động highlight Nav dựa vào URL -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('.nav-link');
+            
+            links.forEach(link => {
+                const path = link.getAttribute('data-path');
+                if(currentPath === path || (currentPath === '/Admin' && path === '/Admin/Index')){
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+    </script>
+    
+    <!-- Validation & Toast Scripts -->
+    <script src="~/js/toast.js" asp-append-version="true"></script>
+    <script src="~/js/validation.js" asp-append-version="true"></script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

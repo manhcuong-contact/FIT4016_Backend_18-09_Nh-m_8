@@ -1,0 +1,620 @@
+@{
+    ViewData["Title"] = "Công Việc Của Bạn";
+    Layout = "_UserLayout";
+}
+
+<!-- Notification Container -->
+<div id="newAssignmentNotification" style="display: none; margin-bottom: 20px; padding: 16px; background: #ECFDF5; border-left: 4px solid #10B981; border-radius: 8px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h4 style="margin: 0 0 4px 0; color: #059669; font-weight: 600;">
+                <i class="fa fa-check-circle"></i> Bạn Vừa Nhận Giao Việc Mới!
+            </h4>
+            <p style="margin: 0; color: #047857; font-size: 14px;" id="notificationMsg">
+                Bạn có <strong id="newAssignCount">1</strong> đơn giao việc mới. Vui lòng kiểm tra và bắt đầu thực hiện.
+            </p>
+        </div>
+        <button onclick="this.parentElement.parentElement.style.display='none'" style="background: none; border: none; color: #047857; font-size: 20px; cursor: pointer;">×</button>
+    </div>
+</div>
+
+<div class="page-header" style="display:flex; justify-content: space-between; align-items:flex-end; margin-bottom: 32px;">
+    <div>
+        <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: #1F2937;">📋 Công Việc Của Bạn</h2>
+        <p class="text-muted" style="margin: 0; font-size: 15px;">Xem các đơn giao việc và nộp sản phẩm gia công</p>
+    </div>
+    
+    <div style="text-align: right;">
+        <span style="font-size: 14px; color: var(--text-muted); display:block; margin-bottom: 4px;">Tổng thu nhập dự kiến</span>
+        <span style="font-size: 28px; font-weight:800; color: var(--success);">@String.Format("{0:N0}", ViewBag.TotalEarnings) đ</span>
+    </div>
+</div>
+
+<div style="margin: 0; width: 100%; display: flex; flex-direction: column;">
+    <!-- Công Việc Section -->
+    <div class="section-header">
+        <h3>📋 Công Việc Của Bạn</h3>
+    </div>
+    <div class="card" style="padding: 0; margin: 0; width: 100%; overflow-x: auto;">
+        <table class="table w-100" id="assignmentsTable" style="margin: 0;">
+        <thead>
+            <tr>
+                <th>Mã Đơn</th>
+                <th>Sản Phẩm</th>
+                <th>Số Lượng Nhận</th>
+                <th>Ngày Giao</th>
+                <th>Hạn Nộp</th>
+                <th>Trạng Thái</th>
+                <th>Hành Động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Load from AJAX -->
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<!-- Penalties Section -->
+<div style="margin-top: 40px; width: 100%; display: flex; flex-direction: column;">
+    <div class="section-header">
+        <h3>⚠️ Phạt & Thanh Toán</h3>
+        <span id="penaltyCount" style="background: #FEE2E2; color: #DC2626; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 13px;">0</span>
+    </div>
+
+    <div class="card" style="padding: 0; margin: 0; width: 100%; overflow-x: auto;">
+        <table class="table w-100" id="penaltiesTable" style="margin: 0;">
+            <thead>
+                <tr>
+                    <th>Mã Đơn</th>
+                    <th>Lý Do Phạt</th>
+                    <th>Số Tiền Phạt</th>
+                    <th>Trạng Thái</th>
+                    <th>Ngày</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Load from AJAX -->
+            </tbody>
+        </table>
+    </div>
+    </div>
+</div>
+
+<!-- Modal Nộp Thành Phẩm -->
+<div id="submitModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-content" style="max-width: 500px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 20px 65px rgba(0,0,0,0.3); animation: slideUp 0.3s ease;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 20px; font-weight: 700;">📦 Nộp Thành Phẩm Gia Công</h3>
+            <button onclick="closeSubmitModal()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #6B7280;">×</button>
+        </div>
+        
+        <div style="background: #F0F9FF; border-left: 4px solid #3B82F6; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+            <p style="margin: 0; font-size: 14px; color: #1F2937;"><strong>Mã Đơn:</strong> <span id="lblAssignId" style="color: #3B82F6; font-weight: 600;"></span></p>
+        </div>
+
+        <p id="quantityHint" style="color: #D97706; font-size: 13px; font-weight: 600; margin: 10px 0; padding: 10px; background: #FFFBEB; border-radius: 6px; border-left: 4px solid #F59E0B;">Tối đa có thể nộp: 0 sp</p>
+        <input type="hidden" id="submitAssignId" />
+        <input type="hidden" id="submitAssignQuantity" />
+        
+        <p class="text-muted" style="margin-bottom: 20px; font-size: 14px; line-height: 1.6; color: #6B7280;">
+            📋 <strong>Nhập số lượng sản phẩm bạn đã hoàn thành</strong><br>
+            Admin sẽ kiểm tra và phân loại hàng đạt / hàng lỗi
+        </p>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label style="font-weight: 600; font-size: 16px; display: block; margin-bottom: 8px;"><i class="fa fa-cube" style="color: #3B82F6; margin-right: 8px;"></i>Số Lượng Nộp (sản phẩm)</label>
+            <input type="number" id="qtySubmit" class="form-control" min="1" placeholder="Nhập số lượng..." style="font-size: 16px; padding: 12px; border: 2px solid #E5E7EB; border-radius: 6px; width: 100%; box-sizing: border-box;" />
+        </div>
+
+        <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;">
+            <button class="btn btn-secondary" onclick="closeSubmitModal()" style="padding: 10px 20px; background: #E5E7EB; color: #374151; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Hủy</button>
+            <button class="btn btn-primary" onclick="submitWork()" style="padding: 10px 24px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">✓ Nộp Hàng</button>
+        </div>
+    </div>
+</div>
+
+
+@section Styles {
+    <style>
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Enhanced Table Styles */
+        .card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border: none;
+        }
+
+        .table td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #E5E7EB;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        .table tbody tr {
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            background-color: #F9FAFB;
+            transform: scale(1.01);
+        }
+
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge.bg-primary {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .badge.bg-warning {
+            background: #FEF3C7;
+            color: #B45309;
+        }
+
+        .badge.bg-success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge.bg-danger {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            margin-top: 40px;
+        }
+
+        .section-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1F2937;
+        }
+
+        .section-header .badge {
+            margin: 0;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9CA3AF;
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            display: block;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        let assignmentRefreshInterval;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAssignments();
+            loadPenalties();
+            loadNotifications();
+            
+            // Auto-refresh assignments & penalties every 20 seconds to check for new assignments
+            assignmentRefreshInterval = setInterval(() => {
+                loadAssignments();
+                loadPenalties();
+                loadNotifications();
+            }, 20000);
+        });
+
+        document.addEventListener('beforeunload', () => {
+            if(assignmentRefreshInterval) clearInterval(assignmentRefreshInterval);
+        });
+
+        async function loadAssignments() {
+            try {
+                const res = await fetch('/User/GetMyAssignments');
+                const data = await res.json();
+                
+                const tbody = document.querySelector('#assignmentsTable tbody');
+                tbody.innerHTML = '';
+                
+                // Check for new assignments
+                const lastLoadedIds = JSON.parse(localStorage.getItem('lastLoadedAssignmentIds') || '[]');
+                const currentIds = data.map(a => a.id);
+                const newAssignments = data.filter(a => !lastLoadedIds.includes(a.id));
+                
+                // Check if any assignment changed status to InProgress (newly assigned)
+                const newInProgressAssignments = newAssignments.filter(a => a.status === 'InProgress');
+                
+                if(newInProgressAssignments.length > 0) {
+                    document.getElementById('newAssignmentNotification').style.display = 'block';
+                    document.getElementById('newAssignCount').innerText = newInProgressAssignments.length;
+                    showSuccess(`🎉 Bạn vừa nhận ${newInProgressAssignments.length} đơn giao việc mới!`);
+                }
+                
+                // Save current IDs
+                localStorage.setItem('lastLoadedAssignmentIds', JSON.stringify(currentIds));
+
+                // Lọc chỉ hiển thị assignments không phải Completed
+                const activeAssignments = data.filter(a => a.status !== 'Completed');
+                
+                if(activeAssignments.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 40px 0;">Không có đơn hàng gia công nào.</td></tr>`;
+                    return;
+                }
+                
+                activeAssignments.forEach(a => {
+                    // Lưu assignment data để dùng trong validation
+                    assignmentDataMap[a.id] = a;
+                    
+                    let statusHtml = '';
+                    let actionHtml = '';
+
+                    switch(a.status) {
+                        case 'InProgress':
+                            statusHtml = `<span class="badge bg-primary">Đang Thực Hiện</span>`;
+                            actionHtml = `<button class="btn btn-sm" onclick="openSubmitModal(${a.id})" style="background: #10B981; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;">✓ Nộp Hàng</button>`;
+                            break;
+                        case 'PendingVerification':
+                        case 'Pending':
+                            statusHtml = `<span class="badge bg-warning">Chờ Admin Duyệt KCS</span>`;
+                            actionHtml = `<span class="text-muted"><i class="fa fa-hourglass"></i> Đang chờ</span>`;
+                            break;
+                        case 'Completed':
+                            statusHtml = `<span class="badge bg-success">Hoàn Tất</span>`;
+                            actionHtml = `<span style="color:var(--success); font-weight:600;"><i class="fa fa-check"></i> Đã thanh toán</span>`;
+                            break;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>#${a.id}</strong></td>
+                            <td>${a.product}</td>
+                            <td>${a.quantityAssigned}</td>
+                            <td>${a.assignedDate}</td>
+                            <td style="color:var(--danger)">${a.dueDate}</td>
+                            <td>${statusHtml}</td>
+                            <td>${actionHtml}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error("Lỗi:", error);
+            }
+        }
+
+        // JS Model Logic
+        let assignmentDataMap = {}; // Store assignment data for validation
+
+        function openSubmitModal(id) {
+            const assignData = assignmentDataMap[id];
+            if (!assignData) {
+                showError('❌ Không tìm thấy thông tin đơn');
+                return;
+            }
+
+            const maxQuantity = assignData.quantityAssigned;
+
+            document.getElementById('submitAssignId').value = id;
+            document.getElementById('submitAssignQuantity').value = maxQuantity;
+            document.getElementById('lblAssignId').innerText = `#${id}`;
+            document.getElementById('qtySubmit').value = '';
+            document.getElementById('qtySubmit').max = maxQuantity;
+            
+            // Cập nhật hint text
+            const statusHint = document.getElementById('quantityHint');
+            if (statusHint) {
+                statusHint.innerText = `📊 Tối đa có thể nộp: ${maxQuantity} sản phẩm`;
+            }
+            
+            document.getElementById('submitModal').style.display = 'flex';
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submitModal').style.display = 'none';
+        }
+
+        async function submitWork() {
+            const id = document.getElementById('submitAssignId').value;
+            const maxQty = parseInt(document.getElementById('submitAssignQuantity').value);
+            const quantity = parseInt(document.getElementById('qtySubmit').value);
+
+            if(isNaN(quantity) || quantity <= 0) {
+                showError('❌ Vui lòng nhập số lượng hợp lệ (≥ 1)');
+                return;
+            }
+
+            if(quantity > maxQty) {
+                showError(`❌ Số lượng nộp (${quantity}) không được vượt quá ${maxQty}`);
+                return;
+            }
+
+            const confirmMsg = `Xác nhận nộp <strong>${quantity} sản phẩm</strong>?\n\n📋 Admin sẽ kiểm tra và phân loại hàng đạt / hàng lỗi`;
+            confirmDialog(confirmMsg, 'Nộp Sản Phẩm', async () => {
+                try {
+                    const res = await fetch(`/User/SubmitWork?assignmentId=${id}&quantity=${quantity}`, {
+                        method: 'POST'
+                    });
+                    
+                    if(!res.ok) {
+                        const err = await res.text();
+                        showError('❌ Lỗi khi nộp hàng: ' + err);
+                        return;
+                    }
+
+                    const result = await res.json();
+                    showSuccess('✓ ' + result.message);
+                    closeSubmitModal();
+                    loadAssignments();
+                } catch(e) {
+                    showError('❌ Lỗi kết nối máy chủ: ' + e.message);
+                }
+            });
+        }
+
+        async function loadPenalties() {
+            try {
+                const res = await fetch('/User/GetMyPenalties');
+                const penalties = await res.json();
+                
+                const tbody = document.querySelector('#penaltiesTable tbody');
+                const penaltyCount = document.getElementById('penaltyCount');
+                
+                // Đếm phạt chưa thanh toán
+                const activePenalties = penalties.filter(p => p.status === 'Active');
+                penaltyCount.innerText = activePenalties.length;
+                
+                tbody.innerHTML = '';
+                
+                if(penalties.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px 0; color: var(--success); font-weight: 600;"><i class="fa fa-check-circle"></i> Bạn không có khoản phạt nào.</td></tr>`;
+                    return;
+                }
+
+                penalties.forEach(p => {
+                    let statusHtml = '';
+                    let actionHtml = '';
+                    let reasonText = '';
+
+                    switch(p.reason) {
+                        case 'QualityFail': reasonText = '❌ Sản phẩm lỗi'; break;
+                        case 'Overdue': reasonText = '⏰ Quá hạn'; break;
+                        default: reasonText = p.reason;
+                    }
+
+                    switch(p.status) {
+                        case 'Active':
+                            statusHtml = `<span class="badge bg-danger" style="background: #FEE2E2; color: #DC2626;">Chưa Thanh Toán</span>`;
+                            actionHtml = `<button class="btn btn-sm" onclick="payPenalty(${p.id})" style="background: #DC2626; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Thanh Toán</button>`;
+                            break;
+                        case 'Deducted':
+                            statusHtml = `<span class="badge bg-success">✓ Đã Thanh Toán</span>`;
+                            actionHtml = `<span style="color: var(--success);">✓ Đã xử lý</span>`;
+                            break;
+                        case 'Waived':
+                            statusHtml = `<span class="badge" style="background: #E5E7EB; color: #6B7280;">Hủy Bỏ</span>`;
+                            actionHtml = `<span style="color: #6B7280;">Đã hủy</span>`;
+                            break;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>#${p.assignmentId}</strong></td>
+                            <td>${reasonText}<br><small style="color: var(--text-muted);">${p.note || ''}</small></td>
+                            <td style="font-weight: 600; color: var(--danger);">${p.amount.toLocaleString('vi-VN')} đ</td>
+                            <td>${statusHtml}</td>
+                            <td>${p.createdDate}</td>
+                            <td>${actionHtml}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error("Lỗi:", error);
+            }
+        }
+
+        async function payPenalty(penaltyId) {
+            confirmDialog(
+                'Bạn muốn <strong>thanh toán khoản phạt</strong> này?',
+                'Thanh Toán Phạt',
+                async () => {
+                    try {
+                        const res = await fetch(`/User/PayPenalty?penaltyId=${penaltyId}`, {
+                            method: 'POST'
+                        });
+                        
+                        if(!res.ok) {
+                            const err = await res.text();
+                            showError('✕ Lỗi: ' + err);
+                            return;
+                        }
+
+                        const result = await res.json();
+                        showSuccess(result.message);
+                        if(result.assignmentCompleted) {
+                            showSuccess('🎉 Đơn giao việc đã hoàn tất!');
+                        }
+                        loadPenalties();
+                        loadAssignments();
+                    } catch(e) {
+                        showError('✕ Lỗi kết nối: ' + e.message);
+                    }
+                }
+            );
+        }
+
+        async function loadNotifications() {
+            try {
+                const res = await fetch('/User/GetUnreadNotifications');
+                const notifications = await res.json();
+                
+                // Hiển thị tất cả unread notifications
+                notifications.forEach(n => {
+                    if (n.type === 'success') {
+                        showSuccess(n.message);
+                    } else if (n.type === 'warning') {
+                        showWarning(n.message);
+                    } else if (n.type === 'error') {
+                        showError(n.message);
+                    } else {
+                        showInfo(n.message);
+                    }
+                });
+            } catch (error) {
+                console.error("Lỗi khi fetch notifications:", error);
+            }
+        }
+
+        // ========== HELPER FUNCTIONS ==========
+        function showSuccessToast(message) {
+            showSuccess(message);
+        }
+
+        function showErrorToast(message) {
+            showError(message);
+        }
+
+        function showSuccess(message) {
+            showToast(message, 'success');
+        }
+
+        function showError(message) {
+            showToast(message, 'error');
+        }
+
+        function showWarning(message) {
+            showToast(message, 'warning');
+        }
+
+        function showInfo(message) {
+            showToast(message, 'info');
+        }
+
+        function showToast(message, type = 'info') {
+            const bgColor = {
+                'success': '#10B981',
+                'error': '#EF4444',
+                'warning': '#F59E0B',
+                'info': '#3B82F6'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: ${bgColor[type]};
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+                font-weight: 500;
+            `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(function () {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Use styled confirmDialog from toast.js
+        // confirmDialog already imported from toast.js - no changes needed
+    </script>
+
+    <style>
+        @@keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+}

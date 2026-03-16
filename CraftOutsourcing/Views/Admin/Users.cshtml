@@ -1,0 +1,110 @@
+@{
+    ViewData["Title"] = "Quản Lý Hộ Gia Công";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header">
+    <h2>Danh Sách Hộ Gia Công</h2>
+</div>
+
+<div class="card p-4">
+    <table class="table w-100" id="usersTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Họ và Tên</th>
+                <th>Tài Khoản</th>
+                <th>Số Điện Thoại</th>
+                <th>Tổng Thu Nhập</th>
+                <th>Tiền Phạt</th>
+                <th>Thu Nhập Ròng</th>
+                <th>Hành Động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Dữ liệu render từ AJAX -->
+        </tbody>
+    </table>
+</div>
+
+@section Styles {
+    <style>
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .table th { background: #F3F4F6; font-weight: 600; }
+        .text-muted { color: var(--text-muted); }
+        .btn-sm { padding: 6px 12px; font-size: 13px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-danger { background: #FEE2E2; color: #DC2626; }
+        .btn-danger:hover { background: #FECACA; }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', loadUsers);
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/Admin/GetUsers');
+                const data = await res.json();
+                
+                const tbody = document.querySelector('#usersTable tbody');
+                tbody.innerHTML = '';
+                
+                if(data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center">Chưa có hộ gia công nào đăng ký.</td></tr>`;
+                    return;
+                }
+
+                data.forEach((u, index) => {
+                    const netIncome = u.totalEarnings - u.totalPenalties;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>#${index + 1}</td>
+                            <td><strong>${u.fullName}</strong></td>
+                            <td><span class="text-muted">${u.username}</span></td>
+                            <td>${u.phone || '<em>Chưa cập nhật</em>'}</td>
+                            <td><strong style="color: #059669;">${Number(u.totalEarnings).toLocaleString('vi-VN')} đ</strong></td>
+                            <td><strong style="color: #DC2626;">${Number(u.totalPenalties).toLocaleString('vi-VN')} đ</strong></td>
+                            <td><strong style="color: #2563EB;">${Number(netIncome).toLocaleString('vi-VN')} đ</strong></td>
+                            <td>
+                                <button class="btn-sm btn-danger" onclick="deleteUser(${u.id}, '${u.fullName}', '${u.username}')">
+                                    <i class="fa fa-trash"></i> Xóa
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error("Lỗi:", error);
+            }
+        }
+
+        async function deleteUser(id, fullName, username) {
+            confirmDialog(
+                `Xóa hộ gia công <strong>"${fullName}"</strong> (tài khoản: <strong>${username}</strong>)?\n\n⚠️ Nếu hộ gia công này đang trong quá trình làm việc, không thể xóa được.`,
+                'Xóa Hộ Gia Công',
+                async () => {
+                    try {
+                        const res = await fetch(`/Admin/DeleteUser/${id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+
+                        if(res.ok) {
+                            const result = await res.json();
+                            showSuccess('✓ Đã xóa hộ gia công và tài khoản đăng nhập');
+                            loadUsers();
+                        } else {
+                            const error = await res.text();
+                            showError('✕ ' + error);
+                        }
+                    } catch (error) {
+                        console.error("Lỗi:", error);
+                        showError('✕ Lỗi: ' + error.message);
+                    }
+                }
+            );
+        }
+    </script>
+}

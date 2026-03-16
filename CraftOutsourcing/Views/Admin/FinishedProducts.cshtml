@@ -1,0 +1,176 @@
+@{
+    ViewData["Title"] = "Thành Phẩm";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+    <div>
+        <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: #1F2937;">📦 Quản Lý Thành Phẩm</h2>
+        <p style="margin: 0; color: #6B7280; font-size: 15px;">Theo dõi tồn kho và chất lượng sản phẩm</p>
+    </div>
+</div>
+
+<div class="card" style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); overflow: hidden;">
+    <table class="table" id="finishedTable">
+        <thead>
+            <tr>
+                <th>Sản Phẩm</th>
+                <th>Thành Phẩm</th>
+                <th>Tổng Đã Sản Xuất</th>
+                <th>Tổng Lỗi</th>
+                <th>Tỷ Lệ Thành Công</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="5" style="text-align:center;padding:40px;color:#9CA3AF;"><i class="fa fa-spinner fa-spin"></i> Đang tải...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+        
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 14px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border: none;
+        }
+        
+        .table td {
+            padding: 16px 14px;
+            text-align: left;
+            border-bottom: 1px solid #E5E7EB;
+            color: #374151;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #F9FAFB;
+            transform: translateX(4px);
+        }
+        
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table strong {
+            color: #1F2937;
+            font-weight: 700;
+        }
+        
+        .rate-good {
+            color: #059669;
+            font-weight: 700;
+            background: #D1FAE5;
+            padding: 6px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .rate-bad {
+            color: #DC2626;
+            font-weight: 700;
+            background: #FEE2E2;
+            padding: 6px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .rate-average {
+            color: #D97706;
+            font-weight: 700;
+            background: #FEF3C7;
+            padding: 6px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', loadFinished);
+
+        async function loadFinished() {
+            try {
+                const res = await fetch('/Admin/GetFinishedProducts');
+                const data = await res.json();
+                const tbody = document.querySelector('#finishedTable tbody');
+                tbody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#9CA3AF;"><i class="fa fa-inbox" style="font-size:24px;margin-bottom:8px;display:block;"></i>Chưa có thành phẩm nào.</td></tr>';
+                    return;
+                }
+                
+                data.forEach((p, index) => {
+                    let total = p.totalProduced + p.totalDefect;
+                    let rate = total > 0 ? (p.totalProduced / total * 100).toFixed(1) : 0;
+                    let rateClass = rate >= 80 ? 'rate-good' : (rate >= 60 ? 'rate-average' : 'rate-bad');
+                    
+                    setTimeout(() => {
+                        tbody.innerHTML += `<tr style="animation: slideIn 0.3s ease forwards;">
+                            <td><strong>${p.name}</strong></td>
+                            <td><strong style="color: #4F46E5;">${p.finishedStock}</strong></td>
+                            <td>${p.totalProduced}</td>
+                            <td style="color: #DC2626; font-weight: 600;">${p.totalDefect}</td>
+                            <td><span class="${rateClass}">${rate}%</span></td>
+                        </tr>`;
+                    }, index * 50);
+                });
+            } catch (error) {
+                console.error("Lỗi:", error);
+                const tbody = document.querySelector('#finishedTable tbody');
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#DC2626;"><i class="fa fa-exclamation-triangle"></i> Lỗi tải dữ liệu</td></tr>';
+            }
+        }
+    </script>
+    
+    <style>
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+}

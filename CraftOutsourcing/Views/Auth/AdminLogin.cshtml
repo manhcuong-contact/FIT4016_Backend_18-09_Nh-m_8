@@ -1,0 +1,180 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng Nhập Quản Trị - CraftOutsourcing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/validation.css" />
+    <style>
+        :root {
+            --primary: #1E293B;
+            --primary-hover: #0F172A;
+            --bg-color: #F8FAFC;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 360px;
+            border-top: 5px solid var(--primary);
+        }
+
+        .login-container h2 {
+            margin: 0 0 10px 0;
+            color: #0F172A;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .login-container p {
+            text-align: center;
+            color: #64748B;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #CBD5E1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .error-message {
+            color: #EF4444;
+            background: #FEE2E2;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 25px;
+            color: #64748B;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>Dành Cho Cơ Sở</h2>
+        <p>Hệ thống quản lý đặt hàng gia công</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="error-message">
+                @ViewBag.Error
+            </div>
+        }
+
+        <form method="post" action="/Auth/AdminLogin" id="adminLoginForm">
+            <div class="form-group">
+                <label>Tài khoản Quản trị</label>
+                <input type="text" id="username" name="username" class="form-control" 
+                       data-validate="nameOnly"
+                       data-field-name="Tài khoản"
+                       placeholder="Ví dụ: admin, quanly" required />
+            </div>
+
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Nhập mật khẩu" required />
+            </div>
+
+            <button type="submit" class="btn-login">Đăng Nhập Admin</button>
+        </form>
+
+        <a href="/Auth/Login" class="back-link">← Trở về Đăng nhập Dành cho Hộ Gia Công</a>
+    </div>
+
+    <script src="/js/toast.js"></script>
+    <script src="/js/validation.js"></script>
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            const usernameInput = document.getElementById('username');
+            
+            // Clear previous errors
+            clearInputError(usernameInput);
+            
+            // Validate required
+            if (!validateRequired(usernameInput, 'Tài khoản')) {
+                e.preventDefault();
+                return;
+            }
+            
+            // Validate format
+            if (!validateInput(usernameInput, 'nameOnly')) {
+                e.preventDefault();
+                return;
+            }
+        });
+    </script>
+</body>
+</html>

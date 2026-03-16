@@ -1,0 +1,240 @@
+@{
+    ViewData["Title"] = "Quản Lý Kho";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+    <div>
+        <h2 style="margin: 0 0 8px 0; font-size: 32px; font-weight: 800; color: #1F2937;">📊 Quản Lý Kho</h2>
+        <p style="margin: 0; color: #6B7280; font-size: 15px;">Theo dõi nguyên liệu và thành phẩm trong kho</p>
+    </div>
+</div>
+
+<!-- Canh bao ton kho thap -->
+<div id="lowStockAlert" style="display:none; background:linear-gradient(135deg, #FEF3C7 0%, #FEFCE8 100%); border-left: 4px solid #F59E0B; border-radius:12px; padding:20px; margin-bottom:24px; box-shadow: 0 4px 6px rgba(245,158,11,0.1);">
+    <strong style="color:#B45309; font-size: 16px;"><i class="fa fa-exclamation-triangle"></i> Cảnh Báo Tồn Kho Thấp</strong>
+    <div id="lowStockList" style="margin-top:12px; font-size:14px; color: #92400e; line-height: 1.8;"></div>
+</div>
+
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+    <!-- Nguyen lieu -->
+    <div class="card" style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; color: white;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700;">📦 Nguyên Liệu</h3>
+        </div>
+        <table class="table" id="materialStockTable">
+            <thead>
+                <tr>
+                    <th>Vật Tư</th>
+                    <th>Đơn Vị</th>
+                    <th>Tồn Kho</th>
+                    <th>Tối Thiểu</th>
+                    <th>Giá Trị</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Thanh pham -->
+    <div class="card" style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%); padding: 20px; color: white;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700;">✨ Thành Phẩm</h3>
+        </div>
+        <table class="table" id="finishedStockTable">
+            <thead>
+                <tr>
+                    <th>Sản Phẩm</th>
+                    <th>Tồn Kho</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Lich su giao dich -->
+<div class="card" style="background: white; border: 1px solid #E5E7EB; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.07); overflow: hidden;">
+    <div style="background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%); padding: 20px; color: white;">
+        <h3 style="margin: 0; font-size: 18px; font-weight: 700;">📋 Lịch Sử Xuất Nhập Kho (50 gần nhất)</h3>
+    </div>
+    <table class="table" id="transTable">
+        <thead>
+            <tr>
+                <th>Vật Tư</th>
+                <th>Loại</th>
+                <th>Số Lượng</th>
+                <th>Đơn Vị</th>
+                <th>Ngày</th>
+                <th>Tham Chiếu</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .table th {
+            background: #F9FAFB;
+            padding: 14px 12px;
+            text-align: left;
+            borders-bottom: 2px solid #E5E7EB;
+            font-weight: 600;
+            color: #374151;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .table td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #E5E7EB;
+            color: #374151;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr {
+            transition: all 0.2s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #F9FAFB;
+            transform: translateX(4px);
+        }
+        
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table strong {
+            color: #1F2937;
+            font-weight: 700;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        
+        .bg-import {
+            background: #D1FAE5;
+            color: #059669;
+        }
+        
+        .bg-export {
+            background: #FEE2E2;
+            color: #DC2626;
+        }
+        
+        .low-stock {
+            background: #FFFBEB !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', loadInventory);
+
+        async function loadInventory() {
+            try {
+                const res = await fetch('/Admin/GetInventoryReport');
+                const data = await res.json();
+
+                // Nguyen lieu
+                const mtb = document.querySelector('#materialStockTable tbody');
+                mtb.innerHTML = '';
+                let lowStockItems = [];
+                data.materials.forEach((m, idx) => {
+                    let cls = m.isLowStock ? 'low-stock' : '';
+                    if (m.isLowStock) lowStockItems.push('📌 ' + m.name + ' (còn ' + m.stockQuantity + ' ' + m.unit + ')');
+                    setTimeout(() => {
+                        mtb.innerHTML += `<tr class="${cls}" style="animation: slideIn 0.3s ease forwards;">
+                            <td><strong>${m.name}</strong></td>
+                            <td>${m.unit}</td>
+                            <td><strong style="color: ${m.isLowStock ? '#DC2626' : '#4F46E5'}">${m.stockQuantity}</strong></td>
+                            <td>${m.minStock}</td>
+                            <td>${Number(m.stockValue).toLocaleString()} đ</td>
+                        </tr>`;
+                    }, idx * 30);
+                });
+
+                if (lowStockItems.length > 0) {
+                    document.getElementById('lowStockAlert').style.display = 'block';
+                    document.getElementById('lowStockList').innerHTML = lowStockItems.join('<br>');
+                }
+
+                // Thanh pham
+                const ftb = document.querySelector('#finishedStockTable tbody');
+                ftb.innerHTML = '';
+                data.finishedProducts.forEach((p, idx) => {
+                    setTimeout(() => {
+                        ftb.innerHTML += `<tr style="animation: slideIn 0.3s ease forwards;">
+                            <td><strong>${p.name}</strong></td>
+                            <td><strong style="color: #06B6D4;">${p.finishedStock}</strong></td>
+                        </tr>`;
+                    }, idx * 30);
+                });
+
+                // Lich su
+                const ttb = document.querySelector('#transTable tbody');
+                ttb.innerHTML = '';
+                data.transactions.forEach((t, idx) => {
+                    let badge = t.transactionType === 'Import'
+                        ? '<span class="badge bg-import"><i class="fa fa-arrow-down"></i> Nhập</span>'
+                        : '<span class="badge bg-export"><i class="fa fa-arrow-up"></i> Xuất</span>';
+                    setTimeout(() => {
+                        ttb.innerHTML += `<tr style="animation: slideIn 0.3s ease forwards;">
+                            <td><strong>${t.materialName}</strong></td>
+                            <td>${badge}</td>
+                            <td style="font-weight: 600; color: #374151;">${t.quantity}</td>
+                            <td>${t.unit}</td>
+                            <td>${t.transactionDate}</td>
+                            <td style="color: #6B7280;"><code>#${t.referenceId || '-'}</code></td>
+                        </tr>`;
+                    }, idx * 20);
+                });
+            } catch (error) {
+                console.error("Lỗi:", error);
+            }
+        }
+    </script>
+    
+    <style>
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+}

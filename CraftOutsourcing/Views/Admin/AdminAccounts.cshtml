@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Quản Lý Admin";
+    Layout = "_AdminLayout";
+}
+
+<div class="page-header">
+    <h2>Quản Lý Tài Khoản Admin</h2>
+</div>
+
+<div class="card p-4">
+    <table class="table" id="adminsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Họ Tên</th>
+                <th>Username</th>
+                <th>SDT</th>
+                <th>Ngày Tạo</th>
+                <th>Đã Duyệt</th>
+                <th>Trạng Thái</th>
+                <th>Thao Tác</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+@section Styles {
+    <style>
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #E5E7EB; font-size: 14px; }
+        .table th { background: #F3F4F6; font-weight: 600; color: #374151; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .bg-approved { background: #D1FAE5; color: #059669; }
+        .bg-pending { background: #FEF3C7; color: #D97706; }
+        .bg-active { background: #DBEAFE; color: #2563EB; }
+        .bg-inactive { background: #F3F4F6; color: #6B7280; }
+        .btn { padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .btn-approve { background: #D1FAE5; color: #059669; }
+        .btn-reject { background: #FEE2E2; color: #DC2626; }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', loadAdmins);
+
+        async function loadAdmins() {
+            const res = await fetch('/Admin/GetAdminAccounts');
+            const data = await res.json();
+            const tbody = document.querySelector('#adminsTable tbody');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;">Không có tài khoản Admin nào.</td></tr>';
+                return;
+            }
+            data.forEach((a, index) => {
+                let approvedBadge = a.isApproved
+                    ? '<span class="badge bg-approved">Đã Duyệt</span>'
+                    : '<span class="badge bg-pending">Chờ Duyệt</span>';
+                let statusBadge = a.isActive
+                    ? '<span class="badge bg-active">Hoạt Động</span>'
+                    : '<span class="badge bg-inactive">Vô Hiều Hóa</span>';
+
+                let actions = '';
+                if (!a.isApproved) {
+                    actions = `<button class="btn btn-approve" onclick="approveAdmin(${a.id})">Phê Duyệt</button>
+                               <button class="btn btn-reject" onclick="rejectAdmin(${a.id})">Tữ Chối</button>`;
+                }
+
+                tbody.innerHTML += `<tr>
+                    <td>#${index + 1}</td>
+                    <td>${a.fullName}</td>
+                    <td>${a.username}</td>
+                    <td>${a.phone || '-'}</td>
+                    <td>${a.createdAt}</td>
+                    <td>${approvedBadge}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actions}</td>
+                </tr>`;
+            });
+        }
+
+        async function approveAdmin(id) {
+            confirmDialog(
+                'Xác nhận <strong>phê duyệt tài khoản Admin</strong> này?',
+                'Phê Duyệt Tài Khoản',
+                async () => {
+                    const res = await fetch(`/Admin/ApproveAdmin?id=${id}`, { method: 'POST' });
+                    if (res.ok) { 
+                        showSuccess('✓ Đã phê duyệt tài khoản'); 
+                        loadAdmins(); 
+                    }
+                    else showError('✕ Lỗi: ' + await res.text());
+                }
+            );
+        }
+
+        async function rejectAdmin(id) {
+            confirmDialog(
+                'Bạn muốn <strong>từ chối và xóa tài khoản</strong> này?\n\n⚠️ Hành động này không thể hoàn tác.',
+                'Từ Chối Tài Khoản',
+                async () => {
+                    const res = await fetch(`/Admin/RejectAdmin?id=${id}`, { method: 'POST' });
+                    if (res.ok) { 
+                        showSuccess('✓ Đã từ chối tài khoản'); 
+                        loadAdmins(); 
+                    }
+                    else showError('✕ Lỗi: ' + await res.text());
+                }
+            );
+        }
+    </script>
+}
